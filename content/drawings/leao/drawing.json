@@ -1,0 +1,19 @@
+{
+  "id": "leao",
+  "category": "animais",
+  "zones": [
+    { "id": "ceu" },
+    { "id": "sol" },
+    { "id": "nuvem" },
+    { "id": "relva" },
+    { "id": "cauda" },
+    { "id": "ponta-cauda" },
+    { "id": "patas" },
+    { "id": "corpo" },
+    { "id": "juba", "sound": "rugido" },
+    { "id": "orelhas" },
+    { "id": "cara", "sound": "rugido" },
+    { "id": "focinho" },
+    { "id": "nariz" }
+  ]
+}

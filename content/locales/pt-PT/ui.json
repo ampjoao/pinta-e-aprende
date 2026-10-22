@@ -1,0 +1,47 @@
+{
+  "meta": { "name": "Português (Portugal)", "dir": "ltr", "review": false },
+  "app": { "title": "Pinta e Aprende" },
+  "home": {
+    "categories": {
+      "animais": "Animais",
+      "letras": "Letras",
+      "numeros": "Números",
+      "veiculos": "Veículos",
+      "natureza": "Natureza",
+      "historias": "Histórias"
+    },
+    "soon": "Em breve!"
+  },
+  "colors": {
+    "red": "Vermelho",
+    "orange": "Laranja",
+    "yellow": "Amarelo",
+    "green": "Verde",
+    "lightblue": "Azul-claro",
+    "blue": "Azul",
+    "purple": "Roxo",
+    "pink": "Cor-de-rosa",
+    "brown": "Castanho",
+    "black": "Preto",
+    "grey": "Cinzento",
+    "white": "Branco"
+  },
+  "tools": {
+    "home": "Voltar ao início",
+    "undo": "Desfazer",
+    "eraser": "Borracha",
+    "restart": "Recomeçar",
+    "repeat": "Repetir",
+    "sound": "Som",
+    "mute": "Sem som",
+    "volume": "Volume",
+    "restartConfirm": "Começar de novo?",
+    "yes": "Sim",
+    "no": "Não"
+  },
+  "say": {
+    "eraser": "Borracha!",
+    "restart": "Vamos começar de novo!",
+    "welcome": "Olá! Escolhe uma cor e toca no desenho."
+  }
+}

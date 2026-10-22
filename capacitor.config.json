@@ -1,0 +1,8 @@
+{
+  "appId": "pt.pintaeaprende.app",
+  "appName": "Pinta e Aprende",
+  "webDir": "dist",
+  "backgroundColor": "#fff7e6",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

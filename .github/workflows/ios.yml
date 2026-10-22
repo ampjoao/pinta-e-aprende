@@ -1,0 +1,31 @@
+# Confirma que a app iOS compila (simulador). Para o iPhone/iPad e a App Store
+# é preciso uma conta Apple Developer — ver README.
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm run build
+      - run: npx cap add ios
+      - run: npx capacitor-assets generate --ios --iconBackgroundColor '#ff8a3d' --splashBackgroundColor '#fff7e6'
+      - run: npx cap sync ios
+      - name: Build for simulator
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Debug \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pinta-e-aprende-ios-simulator
+          path: build/Build/Products/Debug-iphonesimulator/*.app

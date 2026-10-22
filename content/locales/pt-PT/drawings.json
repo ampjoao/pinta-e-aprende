@@ -1,0 +1,20 @@
+{
+  "leao": {
+    "title": "O Leão",
+    "parts": {
+      "ceu": "Isto é o céu.",
+      "sol": "Isto é o sol.",
+      "nuvem": "Isto é uma nuvem.",
+      "relva": "Isto é a relva.",
+      "cauda": "Isto é a cauda do leão.",
+      "ponta-cauda": "Isto é a ponta da cauda.",
+      "patas": "Estas são as patas do leão.",
+      "corpo": "Isto é o corpo do leão.",
+      "juba": "Isto é a juba do leão!",
+      "orelhas": "Estas são as orelhas do leão.",
+      "cara": "Isto é um leão!",
+      "focinho": "Isto é o focinho do leão.",
+      "nariz": "Isto é o nariz do leão."
+    }
+  }
+}
