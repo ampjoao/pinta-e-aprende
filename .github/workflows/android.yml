@@ -18,7 +18,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: android-actions/setup-android@v3
       - run: npm install
       - run: npm run build
       - run: npx cap add android
@@ -26,7 +25,9 @@ jobs:
       - run: npx cap sync android
       - name: Build APK
         working-directory: android
-        run: ./gradlew assembleDebug --no-daemon
+        run: |
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          ./gradlew assembleDebug --no-daemon
       - uses: actions/upload-artifact@v4
         with:
           name: pinta-e-aprende-android
