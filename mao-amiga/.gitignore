@@ -1,0 +1,12 @@
+node_modules
+dist
+data
+*.log
+android/
+ios/
+src-tauri/target/
+src-tauri/gen/
+src-tauri/icons/
+package-lock.json
+src-tauri/Cargo.lock
+.env

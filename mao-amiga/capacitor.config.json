@@ -1,0 +1,8 @@
+{
+  "appId": "org.maoamiga.app",
+  "appName": "Mão Amiga",
+  "webDir": "dist",
+  "backgroundColor": "#f4f7f5",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

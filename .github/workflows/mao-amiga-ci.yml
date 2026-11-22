@@ -1,0 +1,26 @@
+# Mão Amiga: testes (servidor e app) e build web em cada alteração da pasta mao-amiga/.
+name: Mão Amiga · Testes
+
+on:
+  push:
+    branches: [main]
+    paths: ['mao-amiga/**', '.github/workflows/mao-amiga-*.yml']
+  pull_request:
+    paths: ['mao-amiga/**', '.github/workflows/mao-amiga-*.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: mao-amiga
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+      - run: npm run build

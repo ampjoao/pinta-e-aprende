@@ -1,5 +1,7 @@
 # Pinta e Aprende
 
+> Este repositório também contém a app **Mão Amiga** (ajuda financeira anónima) na pasta [`mao-amiga/`](mao-amiga/README.md).
+
 App de pintura para crianças pequenas: escolhem uma cor, tocam numa parte do desenho e ouvem o nome das cores e das coisas. Funciona no browser (tablet, telemóvel, computador), sem contas nem publicidade.
 
 ## Correr no computador
