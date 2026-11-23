@@ -1,81 +1,74 @@
 import { api, type Note, type Role, type Stats } from '../api'
-import { formatEuro } from '../format'
-import { useLoad } from '../ui'
+import { useLocale } from '../i18n'
+import { useCatalog, useLoad } from '../ui'
 
 export function Welcome({ onStart }: { onStart: (mode: 'login' | 'register', role?: Role) => void }) {
+  const { t, money, country } = useLocale()
   const stats = useLoad(() => api<Stats>('GET', '/api/stats'))
   const notes = useLoad(() => api<Note[]>('GET', '/api/notes'))
+  const catalog = useCatalog()
   const s = stats.data
-  const small = (v: number | null) => (v === null ? `menos de ${s?.minGroup ?? 5}` : String(v))
+  const count = (v: number | null) => (v === null ? t('welcome.lessThan', { n: s?.minGroup ?? 5 }) : String(v))
+  const countryNames = (catalog.data?.countries ?? []).map((c) => country(c.code)).sort((a, b) => a.localeCompare(b))
 
   return (
     <div className="stack">
       <section className="hero">
-        <h1>Ajudar sem ninguém saber quem ajudou. Receber sem ninguém saber quem recebeu.</h1>
-        <p>
-          Quem pode ajudar contribui para um fundo comum. Quem precisa prova a sua situação e recebe um apoio mensal.
-          Nenhum doador sabe quem recebeu e nenhum beneficiário sabe quem deu.
-        </p>
+        <h1>{t('welcome.title')}</h1>
+        <p>{t('welcome.lead')}</p>
         <div className="actions">
           <button className="primary" onClick={() => onStart('register', 'donor')}>
-            Quero ajudar
+            {t('welcome.help')}
           </button>
           <button className="secondary" onClick={() => onStart('register', 'beneficiary')}>
-            Preciso de ajuda
+            {t('welcome.needHelp')}
           </button>
           <button className="link" onClick={() => onStart('login')}>
-            Já tenho conta
+            {t('welcome.haveAccount')}
           </button>
         </div>
       </section>
 
       <section className="card">
-        <h2>Como funciona</h2>
+        <h2>{t('welcome.how')}</h2>
         <ol className="steps">
-          <li>
-            <strong>Todos confirmam a identidade.</strong> A lei obriga a saber quem dá e quem recebe dinheiro. Esses dados
-            ficam cifrados e só são vistos por quem tem de os verificar.
-          </li>
-          <li>
-            <strong>Quem precisa prova a necessidade.</strong> Envia documentos de rendimentos e morada. Duas pessoas
-            diferentes da equipa de revisão têm de aprovar. Os documentos são apagados logo depois.
-          </li>
-          <li>
-            <strong>As doações juntam-se num fundo.</strong> Uma vez por mês o fundo é dividido por quem foi aprovado.
-            Como o dinheiro se mistura, não existe ligação entre um doador e um beneficiário, nem sequer na nossa base de dados.
-          </li>
-          <li>
-            <strong>O pagamento chega por transferência.</strong> Para o IBAN em nome da pessoa aprovada, com o descritivo
-            "Mão Amiga". O dinheiro passa por uma instituição de pagamento autorizada.
-          </li>
+          {(['1', '2', '3', '4'] as const).map((n) => (
+            <li key={n}>
+              <strong>{t(`welcome.step${n}.title`)}</strong> {t(`welcome.step${n}.text`)}
+            </li>
+          ))}
         </ol>
       </section>
 
       <section className="card">
-        <h2>Até agora</h2>
-        {stats.error && <p className="muted">{stats.error}</p>}
+        <h2>{t('welcome.sofar')}</h2>
         {s && (
           <div className="stats">
             <div>
-              <span className="big">{s.donatedCents === null ? '—' : formatEuro(s.donatedCents)}</span>
-              <span>doados por {small(s.donors)} pessoas</span>
+              <span className="big">{s.donatedMinor === null ? '—' : money(s.donatedMinor, s.currency)}</span>
+              <span>{t('welcome.donatedBy', { n: count(s.donors) })}</span>
             </div>
             <div>
-              <span className="big">{s.distributedCents === null ? '—' : formatEuro(s.distributedCents)}</span>
-              <span>entregues a {small(s.peopleHelped)} pessoas</span>
+              <span className="big">{s.distributedMinor === null ? '—' : money(s.distributedMinor, s.currency)}</span>
+              <span>{t('welcome.deliveredTo', { n: count(s.peopleHelped) })}</span>
             </div>
             <div>
               <span className="big">{s.cycles}</span>
-              <span>distribuições mensais</span>
+              <span>{t('welcome.cycles')}</span>
             </div>
           </div>
         )}
-        <p className="hint">Com grupos pequenos não mostramos números, para que ninguém possa ser identificado.</p>
+        <p className="hint">{t('welcome.smallGroups')}</p>
+        {countryNames.length > 0 && (
+          <p className="hint">
+            <strong>{t('welcome.countries')}:</strong> {countryNames.join(' · ')}
+          </p>
+        )}
       </section>
 
       {notes.data && notes.data.length > 0 && (
         <section className="card">
-          <h2>Mensagens de quem recebeu</h2>
+          <h2>{t('welcome.notes')}</h2>
           <ul className="notes">
             {notes.data.map((n, i) => (
               <li key={i}>“{n.text}”</li>

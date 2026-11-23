@@ -1,4 +1,4 @@
-/** Ajudas para os testes: gera NIFs e IBANs válidos e um serviço em memória. */
+/** Ajudas para os testes: gera documentos válidos e um serviço em memória. */
 import { loadConfig } from './config.ts'
 import { createCrypto } from './crypto.ts'
 import { openDb } from './db.ts'
@@ -11,6 +11,18 @@ export function makeNif(seed: number): string {
   for (let i = 0; i < 8; i++) sum += Number(base[i]) * (9 - i)
   const check = 11 - (sum % 11)
   return base + (check >= 10 ? 0 : check)
+}
+
+export function makeCpf(seed: number): string {
+  const d = String(100000000 + seed).slice(-9)
+  const digit = (s: string) => {
+    let sum = 0
+    for (let i = 0; i < s.length; i++) sum += Number(s[i]) * (s.length + 1 - i)
+    const r = (sum * 10) % 11
+    return r === 10 ? 0 : r
+  }
+  const d1 = digit(d)
+  return d + d1 + digit(d + d1)
 }
 
 export function makeIban(seed: number): string {
@@ -26,13 +38,6 @@ export function makeTestService(overrides: Record<string, string> = {}) {
   const config = loadConfig({ NODE_ENV: 'test', MIN_DONORS_PER_CYCLE: '2', ...overrides })
   const payments = new MockPaymentProvider()
   const db = openDb(':memory:')
-  const service = createService({
-    db,
-    crypto: createCrypto('11'.repeat(32)),
-    config,
-    payments,
-    kyc: new MockKycProvider(),
-    now: () => clock,
-  })
+  const service = createService({ db, crypto: createCrypto('11'.repeat(32)), config, payments, kyc: new MockKycProvider(), now: () => clock })
   return { service, payments, db, config, advance: (ms: number) => (clock += ms) }
 }

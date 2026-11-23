@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS users (
   pass_hash TEXT NOT NULL,
   role TEXT NOT NULL CHECK (role IN ('donor','beneficiary','reviewer','admin')),
   suspended INTEGER NOT NULL DEFAULT 0,
+  -- Revisores: países que podem rever (códigos separados por vírgulas; vazio = todos).
+  review_countries TEXT,
   created_at INTEGER NOT NULL
 );
 
@@ -32,11 +34,13 @@ CREATE TABLE IF NOT EXISTS sessions (
 );
 
 -- Identidade verificada (obrigatória por lei: prevenção de branqueamento de capitais).
--- O nome fica cifrado; o NIF só existe como impressão digital (HMAC) para impedir contas duplicadas.
+-- O nome fica cifrado; o número de identificação só existe como impressão digital (HMAC),
+-- para impedir contas duplicadas. country = país onde a pessoa vive.
 CREATE TABLE IF NOT EXISTS identities (
   user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  country TEXT NOT NULL,
   legal_name_enc TEXT NOT NULL,
-  nif_fp TEXT NOT NULL UNIQUE,
+  id_fp TEXT NOT NULL UNIQUE,
   birth_date_enc TEXT NOT NULL,
   provider_ref TEXT NOT NULL,
   verified_at INTEGER NOT NULL
@@ -46,6 +50,9 @@ CREATE TABLE IF NOT EXISTS applications (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   status TEXT NOT NULL CHECK (status IN ('draft','pending','approved','rejected','suspended','expired')),
+  -- Valores em moeda local (unidades mínimas), na moeda do país.
+  country TEXT NOT NULL,
+  currency TEXT NOT NULL,
   household_adults INTEGER,
   household_children INTEGER,
   monthly_income_cents INTEGER,
@@ -53,8 +60,9 @@ CREATE TABLE IF NOT EXISTS applications (
   category TEXT,
   description TEXT,
   requested_cents INTEGER,
-  iban_enc TEXT,
-  iban_fp TEXT,
+  payout_type TEXT,
+  payout_enc TEXT,
+  payout_fp TEXT,
   decision_note TEXT,
   created_at INTEGER NOT NULL,
   submitted_at INTEGER,
@@ -93,10 +101,13 @@ CREATE TABLE IF NOT EXISTS reviews (
 );
 
 -- Entradas no fundo comum. cycle_id indica em que ciclo a doação foi contada, nada mais.
+-- amount_cents está na moeda base; original_* é o que o doador pagou (para o recibo).
 CREATE TABLE IF NOT EXISTS donations (
   id TEXT PRIMARY KEY,
   donor_id TEXT NOT NULL REFERENCES users(id),
   amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  original_currency TEXT NOT NULL,
+  original_amount INTEGER NOT NULL,
   provider_ref TEXT NOT NULL,
   cycle_id TEXT,
   created_at INTEGER NOT NULL
@@ -112,11 +123,14 @@ CREATE TABLE IF NOT EXISTS cycles (
 );
 
 -- Saídas do fundo comum. Não têm qualquer referência a doadores ou doações.
+-- amount_cents está na moeda base; local_* é a estimativa na moeda de quem recebe.
 CREATE TABLE IF NOT EXISTS payouts (
   id TEXT PRIMARY KEY,
   cycle_id TEXT NOT NULL REFERENCES cycles(id),
   beneficiary_id TEXT NOT NULL REFERENCES users(id),
   amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+  local_currency TEXT NOT NULL,
+  local_amount INTEGER NOT NULL,
   status TEXT NOT NULL CHECK (status IN ('pending','sent','failed')),
   provider_ref TEXT,
   created_at INTEGER NOT NULL

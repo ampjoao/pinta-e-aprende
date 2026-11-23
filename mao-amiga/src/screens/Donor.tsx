@@ -1,77 +1,109 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api, type Donation } from '../api'
-import { formatDate, formatEuro, parseEuro } from '../format'
-import { Card, ErrorBox, useAction, useLoad } from '../ui'
+import { useLocale } from '../i18n'
+import { Card, ErrorBox, Field, useAction, useCatalog, useLoad } from '../ui'
 
-const PRESETS = [1000, 2500, 5000, 10000]
-
-export function Donor() {
+export function Donor({ country }: { country: string | null }) {
+  const { t, money, parseMoney, currencyName } = useLocale()
+  const catalog = useCatalog()
   const donations = useLoad(() => api<Donation[]>('GET', '/api/donations'))
-  const [amount, setAmount] = useState<number | null>(2500)
+  const [currency, setCurrency] = useState<string | null>(null)
+  const [amount, setAmount] = useState<number | null>(null)
   const [custom, setCustom] = useState('')
-  const [thanks, setThanks] = useState<number | null>(null)
+  const [thanks, setThanks] = useState<string | null>(null)
   const action = useAction()
-  const total = (donations.data ?? []).reduce((s, d) => s + d.amountCents, 0)
+  const cat = catalog.data
+
+  // Moeda por omissão: a do país do doador, se for aceite; senão a moeda base.
+  useEffect(() => {
+    if (!cat || currency) return
+    const local = cat.countries.find((c) => c.code === country)?.currency
+    const initial = local && cat.donationCurrencies.includes(local) ? local : cat.baseCurrency
+    setCurrency(initial)
+    setAmount(cat.donationPresets[initial]?.[1] ?? null)
+  }, [cat, country, currency])
+
+  const presets = (currency && cat?.donationPresets[currency]) || []
+  const chosen = amount ?? (currency ? parseMoney(custom, currency) : null)
+  const list = donations.data ?? []
+  const totals = new Map<string, number>()
+  for (const d of list) totals.set(d.currency, (totals.get(d.currency) ?? 0) + d.amountMinor)
 
   const donate = () =>
     void action.run(async () => {
-      const value = amount ?? parseEuro(custom)
-      if (!value) throw new Error('Indique um valor.')
-      await api('POST', '/api/donations', { amountCents: value })
-      setThanks(value)
+      if (!currency || !chosen) throw new Error(t('donor.amountRequired'))
+      await api('POST', '/api/donations', { amountMinor: chosen, currency })
+      setThanks(money(chosen, currency))
       setCustom('')
       await donations.reload()
     })
 
   return (
     <div className="stack">
-      <Card title="Fazer uma doação">
-        <p>O valor entra no fundo comum e é distribuído no próximo ciclo mensal por pessoas com necessidade verificada.</p>
-        <div className="presets">
-          {PRESETS.map((p) => (
-            <button key={p} className={amount === p ? 'on' : ''} onClick={() => setAmount(p)}>
-              {formatEuro(p)}
+      <Card title={t('donor.title')}>
+        <p>{t('donor.intro')}</p>
+        <ErrorBox message={catalog.error} />
+        {cat && currency && (
+          <div className="stack">
+            <Field label={t('donor.currency')}>
+              <select
+                value={currency}
+                onChange={(e) => {
+                  setCurrency(e.target.value)
+                  setAmount(cat.donationPresets[e.target.value]?.[1] ?? null)
+                }}
+              >
+                {cat.donationCurrencies.map((c) => (
+                  <option key={c} value={c}>
+                    {c} · {currencyName(c)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <div className="presets">
+              {presets.map((p) => (
+                <button key={p} className={amount === p ? 'on' : ''} onClick={() => setAmount(p)}>
+                  {money(p, currency)}
+                </button>
+              ))}
+              <button className={amount === null ? 'on' : ''} onClick={() => setAmount(null)}>
+                {t('donor.other')}
+              </button>
+            </div>
+            {amount === null && <input aria-label={t('donor.otherLabel')} inputMode="decimal" value={custom} onChange={(e) => setCustom(e.target.value)} />}
+            <ErrorBox message={action.error} />
+            {thanks && <p className="ok">{t('donor.thanks', { amount: thanks })}</p>}
+            <button className="primary" disabled={action.busy || !chosen} onClick={donate}>
+              {t('donor.give', { amount: chosen ? money(chosen, currency) : '' })}
             </button>
-          ))}
-          <button className={amount === null ? 'on' : ''} onClick={() => setAmount(null)}>
-            Outro valor
-          </button>
-        </div>
-        {amount === null && (
-          <input aria-label="Outro valor em euros" inputMode="decimal" placeholder="Ex.: 15,00" value={custom} onChange={(e) => setCustom(e.target.value)} />
+          </div>
         )}
-        <ErrorBox message={action.error} />
-        {thanks !== null && <p className="ok">Obrigado! {formatEuro(thanks)} entraram no fundo comum.</p>}
-        <button className="primary" disabled={action.busy} onClick={donate}>
-          Doar {amount ? formatEuro(amount) : ''}
-        </button>
-        <p className="hint">
-          Doações a uma associação reconhecida podem ser deduzidas no IRS. O recibo fica disponível em nome de quem doou,
-          nunca é mostrado a quem recebe.
-        </p>
+        <p className="hint">{t('donor.tax')}</p>
       </Card>
 
-      <Card title="As minhas doações">
-        {donations.error && <ErrorBox message={donations.error} />}
-        {donations.data?.length === 0 && <p className="muted">Ainda não fez nenhuma doação.</p>}
-        {donations.data && donations.data.length > 0 && (
+      <Card title={t('donor.history')}>
+        <ErrorBox message={donations.error} />
+        {donations.loaded && list.length === 0 && <p className="muted">{t('donor.none')}</p>}
+        {list.length > 0 && (
           <>
             <p>
-              Total: <strong>{formatEuro(total)}</strong>
+              <strong>{t('donor.total', { amount: [...totals].map(([c, v]) => money(v, c)).join(' + ') })}</strong>
             </p>
             <ul className="list">
-              {donations.data.map((d) => (
+              {list.map((d) => (
                 <li key={d.id}>
-                  <span>{formatDate(d.createdAt)}</span>
-                  <span>{formatEuro(d.amountCents)}</span>
-                  <span className="tag">{d.distributed ? 'Distribuída' : 'À espera do ciclo'}</span>
+                  <DonationDate ms={d.createdAt} />
+                  <span>{money(d.amountMinor, d.currency)}</span>
+                  <span className="tag">{d.distributed ? t('donor.distributed') : t('donor.waiting')}</span>
                 </li>
               ))}
             </ul>
           </>
         )}
-        <p className="hint">Não mostramos a quem foi o seu dinheiro: ele junta-se ao de outras pessoas e é dividido por todos.</p>
+        <p className="hint">{t('donor.whereTo')}</p>
       </Card>
     </div>
   )
 }
+
+const DonationDate = ({ ms }: { ms: number }) => <span>{useLocale().date(ms)}</span>

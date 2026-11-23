@@ -1,5 +1,6 @@
 /** Servidor HTTP sem dependências externas. Todas as respostas são JSON. */
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http'
+import { pickLanguage, translate } from './messages.ts'
 import { HttpError, type Service, type User } from './service.ts'
 
 type Handler = (ctx: { user: User | null; body: Record<string, unknown>; params: string[]; token?: string }) => unknown
@@ -39,6 +40,7 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
 
   // Público
   add('GET', '/api/health', false, () => ({ ok: true }))
+  add('GET', '/api/catalog', false, () => service.catalog())
   add('GET', '/api/stats', false, () => service.stats())
   add('GET', '/api/notes', false, () => service.approvedNotes())
   add('POST', '/api/auth/register', false, ({ body }) => service.register(body))
@@ -98,7 +100,7 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
       req.on('data', (c: Buffer) => {
         size += c.length
         if (size > MAX_BODY_BYTES) {
-          reject(new HttpError(413, 'Pedido demasiado grande.'))
+          reject(new HttpError(413, 'too_large'))
           req.destroy()
         } else chunks.push(c)
       })
@@ -108,7 +110,7 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
           const parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'))
           resolve(parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {})
         } catch {
-          reject(new HttpError(400, 'JSON inválido.'))
+          reject(new HttpError(400, 'invalid_json'))
         }
       })
       req.on('error', reject)
@@ -119,7 +121,7 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
     if (origin && options.allowedOrigins.includes(origin)) {
       res.setHeader('access-control-allow-origin', origin)
       res.setHeader('vary', 'Origin')
-      res.setHeader('access-control-allow-headers', 'authorization, content-type')
+      res.setHeader('access-control-allow-headers', 'authorization, content-type, accept-language')
       res.setHeader('access-control-allow-methods', 'GET, POST, PUT, DELETE, OPTIONS')
       res.setHeader('access-control-max-age', '600')
     }
@@ -128,7 +130,7 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
     try {
       const path = new URL(req.url ?? '/', 'http://x').pathname
       if (SENSITIVE.has(path) && !sensitive(req.socket.remoteAddress ?? '?')) {
-        throw new HttpError(429, 'Demasiadas tentativas. Tente daqui a 15 minutos.')
+        throw new HttpError(429, 'too_many_requests')
       }
       let params: string[] = []
       const route = routes.find((r) => {
@@ -137,18 +139,19 @@ export function createApp(service: Service, options: { allowedOrigins: string[] 
         if (m) params = m.slice(1)
         return Boolean(m)
       })
-      if (!route) throw new HttpError(404, 'Não encontrado.')
+      if (!route) throw new HttpError(404, 'not_found')
       const auth = req.headers.authorization
       const token = auth?.startsWith('Bearer ') ? auth.slice(7) : undefined
       const user = service.authenticate(token)
-      if (route.auth && !user) throw new HttpError(401, 'Sessão expirada. Entre outra vez.')
+      if (route.auth && !user) throw new HttpError(401, 'session_expired')
       const body = req.method === 'GET' ? {} : await readBody(req)
       const result = await route.handler({ user, body, params, token })
       send(res, 200, result)
     } catch (err) {
-      if (err instanceof HttpError) return send(res, err.status, { error: err.message })
+      const lang = pickLanguage(req.headers['accept-language'])
+      if (err instanceof HttpError) return send(res, err.status, { code: err.code, error: translate(lang, err.code, err.params) })
       console.error('[mao-amiga]', err)
-      send(res, 500, { error: 'Erro interno. Tente mais tarde.' })
+      send(res, 500, { code: 'internal', error: translate(lang, 'internal') })
     }
   })
 }

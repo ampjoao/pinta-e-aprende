@@ -1,4 +1,6 @@
 /** Configuração do servidor, lida das variáveis de ambiente (ver .env.example). */
+import { loadCatalog, type CountryCatalog } from './countries.ts'
+
 export interface Config {
   port: number
   dbPath: string
@@ -6,17 +8,17 @@ export interface Config {
   allowedOrigins: string[]
   adminEmail?: string
   adminPassword?: string
-  /** Máximo que um beneficiário pode receber por mês, em cêntimos. */
-  maxMonthlyCents: number
+  /** Moeda do fundo comum (ISO 4217). Todas as contas internas são feitas nesta moeda. */
+  baseCurrency: string
+  /** Países abertos, com as suas regras, e câmbios. Ver countries.ts. */
+  catalog: CountryCatalog
   /** Um ciclo de distribuição só corre com pelo menos este número de doadores diferentes (anonimato). */
   minDonorsPerCycle: number
-  /** Limiar de pobreza mensal, em cêntimos. Atualizar com o valor oficial mais recente do INE. */
-  povertyLineCents: number
   /** Número de revisores diferentes que têm de aprovar um pedido (mínimo 2). */
   approvalsRequired: number
   /** Validade de uma aprovação, em dias. Depois disso o beneficiário volta a provar a necessidade. */
   approvalValidDays: number
-  /** Doação mínima e máxima por operação, em cêntimos. */
+  /** Doação mínima e máxima por operação, em unidades mínimas da moeda base. */
   minDonationCents: number
   maxDonationCents: number
 }
@@ -39,6 +41,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
     if (!Number.isInteger(n) || n < 0) throw new Error(`${name} tem de ser um número inteiro.`)
     return n
   }
+  const baseCurrency = (env.BASE_CURRENCY || 'EUR').toUpperCase()
+  const catalog = loadCatalog(env)
+  if (catalog.fxPerBase[baseCurrency] !== 1) throw new Error(`O câmbio da moeda base (${baseCurrency}) tem de ser 1.`)
   return {
     port: int('PORT', 8787),
     dbPath: env.DB_PATH || './data/mao-amiga.db',
@@ -52,9 +57,9 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .filter(Boolean),
     adminEmail: env.ADMIN_EMAIL || undefined,
     adminPassword: env.ADMIN_PASSWORD || undefined,
-    maxMonthlyCents: int('MAX_MONTHLY_CENTS', 30000),
+    baseCurrency,
+    catalog,
     minDonorsPerCycle: int('MIN_DONORS_PER_CYCLE', 5),
-    povertyLineCents: int('POVERTY_LINE_CENTS', 63600),
     approvalsRequired: Math.max(2, int('APPROVALS_REQUIRED', 2)),
     approvalValidDays: int('APPROVAL_VALID_DAYS', 180),
     minDonationCents: int('MIN_DONATION_CENTS', 500),
