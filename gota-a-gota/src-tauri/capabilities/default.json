@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "A Gota a Gota não precisa de permissões especiais.",
+  "windows": ["main"],
+  "permissions": ["core:default"]
+}

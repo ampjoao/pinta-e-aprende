@@ -1,0 +1,50 @@
+# Gota a Gota: instaladores Windows (.msi/.exe) e Mac (.dmg).
+# Descarregar em Actions → "Gota a Gota · Windows e Mac" → Artifacts.
+name: Gota a Gota · Windows e Mac
+
+on:
+  push:
+    branches: [main]
+    paths: ['gota-a-gota/**']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: gota-a-gota
+
+env:
+  VITE_API_URL: ${{ vars.GOTA_A_GOTA_API_URL }}
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: windows
+          - os: macos-latest
+            name: mac
+            args: --target universal-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.name == 'mac' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: gota-a-gota/src-tauri
+      - run: npm install
+      - run: npx tauri icon assets/logo.png
+      - run: npx tauri build ${{ matrix.args }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: gota-a-gota-${{ matrix.name }}
+          path: |
+            gota-a-gota/src-tauri/target/**/bundle/msi/*.msi
+            gota-a-gota/src-tauri/target/**/bundle/nsis/*.exe
+            gota-a-gota/src-tauri/target/**/bundle/dmg/*.dmg

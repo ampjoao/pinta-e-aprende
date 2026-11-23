@@ -1,0 +1,8 @@
+{
+  "appId": "org.gotaagota.app",
+  "appName": "Gota a Gota",
+  "webDir": "dist",
+  "backgroundColor": "#f7f2ea",
+  "android": { "allowMixedContent": false },
+  "ios": { "contentInset": "never" }
+}

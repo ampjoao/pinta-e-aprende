@@ -1,0 +1,26 @@
+# Gota a Gota: testes (servidor e app) e build web em cada alteração da pasta gota-a-gota/.
+name: Gota a Gota · Testes
+
+on:
+  push:
+    branches: [main]
+    paths: ['gota-a-gota/**', '.github/workflows/gota-a-gota-*.yml']
+  pull_request:
+    paths: ['gota-a-gota/**', '.github/workflows/gota-a-gota-*.yml']
+  workflow_dispatch:
+
+defaults:
+  run:
+    working-directory: gota-a-gota
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npm test
+      - run: npm run build
