@@ -125,6 +125,7 @@ function useDocumentLang() {
   useEffect(() => {
     const obs = new MutationObserver(() => setLang(document.documentElement.lang || 'en'))
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
+    setLang(document.documentElement.lang || 'en')
     return () => obs.disconnect()
   }, [])
   return lang

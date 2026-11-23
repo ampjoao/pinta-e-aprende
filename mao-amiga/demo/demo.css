@@ -27,7 +27,7 @@
   color: var(--text);
   font-size: 0.85rem;
 }
-.demo-row button.on { background: var(--brand); border-color: var(--brand); color: var(--bg); font-weight: 600; }
+.demo-row button.on { background: var(--brand); border-color: var(--brand); color: var(--on-brand); font-weight: 600; }
 .demo-loading {
   max-width: 760px;
   margin: 0 auto;
