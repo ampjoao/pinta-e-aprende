@@ -26,7 +26,7 @@ jobs:
       - run: npm install
       - run: npm run build
       - run: npx cap add ios
-      - run: npx capacitor-assets generate --ios --iconBackgroundColor '#c93f6b' --splashBackgroundColor '#fdf7f8'
+      - run: npx capacitor-assets generate --ios --iconBackgroundColor '#a95c33' --splashBackgroundColor '#f7f2ea'
       - run: npx cap sync ios
       - name: Build for simulator
         run: |

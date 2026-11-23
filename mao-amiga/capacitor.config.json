@@ -2,7 +2,7 @@
   "appId": "org.maoamiga.app",
   "appName": "Mão Amiga",
   "webDir": "dist",
-  "backgroundColor": "#fdf7f8",
+  "backgroundColor": "#f7f2ea",
   "android": { "allowMixedContent": false },
   "ios": { "contentInset": "never" }
 }
