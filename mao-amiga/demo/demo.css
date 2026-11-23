@@ -1,0 +1,38 @@
+/* Faixa da demonstração, por cima da app. Usa as cores da app (styles.css). */
+.demo-bar {
+  background: var(--brand-soft);
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.9rem;
+}
+.demo-inner {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.demo-inner p { margin: 0; }
+.demo-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.demo-label { color: var(--muted); margin-inline-end: 4px; }
+.demo-row button {
+  min-height: 36px;
+  padding: 6px 12px;
+  border-radius: 99px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.demo-row button.on { background: var(--brand); border-color: var(--brand); color: var(--bg); font-weight: 600; }
+.demo-loading {
+  max-width: 760px;
+  margin: 0 auto;
+  padding-block: 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  color: var(--muted);
+}

@@ -51,6 +51,13 @@ simulados**. Para usar a sério falta:
 4. Alojar o servidor com HTTPS, uma `MASTER_KEY` secreta e cópias de segurança.
 5. Políticas de privacidade e termos em cada língua.
 
+## Demonstração
+
+`npm run demo:build` gera `demo-dist/index.html`: a app completa num só ficheiro, a correr no
+browser sem servidor (as mesmas regras de `server/`, com SQLite em JavaScript) e com pessoas e
+dinheiro fictícios de vários países. Uma faixa no topo permite entrar como doador, beneficiária,
+revisor ou administração. `npm run demo` abre a mesma versão em modo de desenvolvimento.
+
 ## Correr no computador
 
 Precisa do [Node.js](https://nodejs.org) 22.18 ou mais recente.

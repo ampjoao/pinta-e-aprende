@@ -10,3 +10,4 @@ src-tauri/icons/
 package-lock.json
 src-tauri/Cargo.lock
 .env
+demo-dist
